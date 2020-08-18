@@ -1,0 +1,7 @@
+result/
+source/
+src/__pycache__/
+
+
+*csv
+*pyc
