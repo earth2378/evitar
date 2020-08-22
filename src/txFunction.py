@@ -125,18 +125,20 @@ def writeTx(w3,fileName,block_start,block_end=0):
             csv_writer.writerow([address,method,s[0],s[1],s[2],s[3],s[4],s[5]])
     csv_write.close()
 
-def mapContractInfo():
-    with open('2606_contractAddressMapping.csv') as csv_file:
+# function for map oldAddress -> newAddress and oldOwner -> newOwner
+def mapContractInfo(file):
+    # contract mapping file
+    with open(file) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         csv_reader.__next__()
-        contractAddress = dict()
-        oldOwner = dict()
+        contractAddressMapping = dict()
+        ownerMapping = dict()
         for row in csv_reader:
-            # row: 'oldOwner','oldAddress','newAddress','status'
-            contractAddress[row[1]] = row[2]
-            oldOwner[row[1]] = row[0]
+            # row: hash, oldCreator, oldContractAddress, newContractAddress, tatus
+            contractAddressMapping[row[2]] = row[3]
+            ownerMapping[row[2]] = row[1]
 
-    return contractAddress,oldOwner
+    return contractAddressMapping,ownerMapping
 
 def compare2CSV():
     csv_file1 = open('2606_contract_src.csv','r')
