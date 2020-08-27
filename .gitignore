@@ -5,3 +5,5 @@ src/__pycache__/
 
 *csv
 *pyc
+evitar_tx/
+evitar_tx_by_hash/
