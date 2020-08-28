@@ -32,6 +32,7 @@ def splitTx(src,addressMapping):
 
     return txPool, maxLen, cmWarning
 
+# csv_write performance : 0.83 sec/ 10k row
 def writeTx(w3,txId):
     txResult = w3.eth.getTransaction(txId.hex())
     txReceipt = w3.eth.getTransactionReceipt(txId.hex())
