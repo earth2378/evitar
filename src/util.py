@@ -24,11 +24,22 @@ def classifyTx():
             if(count%100000 == 0):
                 print(count,time.time()-start_time)
             
-            csv_write = open("../evitar_tx_by_hash/"+row[7][0:3]+".csv","a")
+            csv_write = open("../evitar_tx_by_hash/"+row[2][0:3]+".csv","a")
             csv_writer = csv.writer(csv_write, delimiter=',')
             csv_writer.writerow(row)
             csv_write.close()
 
-initFile()
-classifyTx()
+def countTx():
+    csv.field_size_limit(100000000)
+    files = ['0x1','0x2','0x3','0x4','0x5','0x6','0x7','0x8','0x9','0x0','0xa','0xb','0xc','0xd','0xe','0xf']
+    txCount = 0
+    for file in files:
+        fileName = "../evitar_tx_by_hash/"+file+".csv"
+        with open(fileName) as f:
+            txCount += sum(1 for line in f)
 
+    print(txCount)
+
+def initTxInput():
+    initFile()
+    classifyTx()
