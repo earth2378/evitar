@@ -64,20 +64,6 @@ def checkTxInBlock(w3,block_start):
     print("Fail: "+str(fail))
     print("Out of gas: "+str(oog))
 
-def writeNewAddress(w3):
-    csv_write = open('2606_newContractAddress.csv','w+',newline = '')
-    csv_writer = csv.writer(csv_write, delimiter=',')
-    csv_writer.writerow(['hash','input_cut','contractAdderss','status'])
-    for i in range(0,w3.eth.blockNumber+1):
-        txList = w3.eth.getBlock(i).transactions
-        for tx in txList:
-            txReceipt, txResult = w3.eth.getTransactionReceipt(tx), w3.eth.getTransaction(tx)
-            if(txReceipt.status == 0):
-                if(txResult.gas == txReceipt.gasUsed): msg = 'All Gas Consumed'
-                else: msg = 'Revert'
-            else: msg = 'Success'
-            csv_writer.writerow([tx.hex(),txResult.input[0:100],w3.toChecksumAddress(txReceipt.contractAddress),msg])
-    csv_write.close()
 
 def writeTx(w3,fileName,block_start,block_end=0):
     result = dict()
@@ -134,47 +120,11 @@ def mapContractInfo(file):
         contractAddressMapping = dict()
         ownerMapping = dict()
         for row in csv_reader:
-            # row: hash, oldCreator, oldContractAddress, newContractAddress, tatus
+            # row: hash, oldCreator, oldContractAddress, newContractAddress, status
             contractAddressMapping[row[2]] = row[3]
             ownerMapping[row[2]] = row[1]
 
     return contractAddressMapping,ownerMapping
-
-def compare2CSV():
-    csv_file1 = open('2606_contract_src.csv','r')
-    csv_reader1 = csv.reader(csv_file1, delimiter=',')
-    csv_file2 = open('2606_newContractAddress.csv','r')
-    csv_reader2 = csv.reader(csv_file2, delimiter=',')
-    csv_reader1.__next__()
-    csv_reader2.__next__()
-
-    file1,file2 = [],[]
-    for row in csv_reader1:
-        # row: hash,from_address, receipt_contract_address,value,gas,gas_price,input
-        oldOwner = row[1]
-        oldAddress = row[2]
-        input1_cut = row[6][0:100]
-        file1.append([input1_cut,oldOwner,oldAddress])
-    for row in csv_reader2:
-        #row: hash,input_cut,contractAdderss,status
-        newAddress = row[2]
-        status = row[3]
-        input2_cut = row[1]
-        file2.append([input2_cut,newAddress,status])
-    csv_file1.close()
-    csv_file2.close()
-
-    csv_write = open('2606_contractAddressMapping.csv','w+',newline = '')
-    csv_writer = csv.writer(csv_write, delimiter=',')
-    csv_writer.writerow(['oldOwner','oldAddress','newAddress','status'])
-    c = 0
-    for i in range(len(file1)):
-        if(file1[i][0] == file2[i][0]):
-            c+=1
-            csv_writer.writerow([file1[i][1],file1[i][2],file2[i][1],file2[i][2]])
-    print(c)
-    csv_write.close()
-
 
 def txGasUsed(w3,fileName,block_start,block_end=0):
     count = 0
