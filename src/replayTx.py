@@ -1,4 +1,4 @@
-import math,csv,time,os,random
+import math,csv,time,os,random,shutil
 from web3 import Web3, HTTPProvider, IPCProvider, WebsocketProvider
 import src.txFunction as txF
 
@@ -43,19 +43,30 @@ def writeTx(w3,txId):
     csv_write.close()
     return txResult.to, txResult.input[0:10], txReceipt.status
 
+def saveGethNode(file):
+    src = "./geth/geth"
+    dst = "./" + file + "/geth"
+    shutil.copytree(src, dst)  
 
 #Function to deploy multiple transaction with normal and max gas
-def replayBaseLineAndMaxGas(w3,w3_2,src):
+def replayBaseLineAndMaxGas(w3,w3_2,file):
     private_key_0, private_key_1 = txF.getPrivateKey(w3,0), txF.getPrivateKey(w3,1)
     nonce_0, nonce_1 = w3.eth.getTransactionCount(w3.eth.accounts[0]), w3.eth.getTransactionCount(w3.eth.accounts[1])
 
     gas_price = 1000000
-    addressMapping, ownerMapping = txF.mapContractInfo('available_contract.csv')
+    addressMapping, ownerMapping = txF.mapContractInfo('./result/available_contract.csv')
     start_time = time.time()
     count = 0
 
+    csv_read = open(file, "r")
+    csv_reader = csv.reader(csv_read, delimiter=",")
+    csv_reader.__next__()
+
+    w3.geth.miner.start(1)
+    w3_2.geth.miner.start(1)
+
     #row = hash,from_address, to_address, transaction_index, value, gas, gas_price, input, block_number, receipt_status, error
-    for row in src:
+    for row in csv_reader:
         if(count%10000 == 0):
             print(count,time.time()-start_time)
         count += 1
@@ -72,27 +83,56 @@ def replayBaseLineAndMaxGas(w3,w3_2,src):
         toAddress = addressMapping[row[2]]
 
         #sendWithNormal
-        tx = txF.createTx(w3,toAddress,nonce,int(row[4]),int(row[5]),gas_price,row[7],pk)
-        txF.sendTx(w3,tx)
+        try:
+            tx = txF.createTx(w3,toAddress,nonce,int(row[4]),int(row[5]),gas_price,row[7],pk)
+            txF.sendTx(w3,tx)
+        except:
+            print(row)
+            csv_write = open("error.csv","a")
+            csv_writer = csv.writer(csv_write, delimiter=',')
+            csv_writer.writerow(row)
+            csv_write.close()
 
         #sendWithMaxGas
-        tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),int(row[11]),gas_price,row[7],pk)
-        txF.sendTx(w3_2,tx)
+        try:
+            tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),int(row[5]),gas_price,row[7],pk)
+            txF.sendTx(w3_2,tx)
+        except:
+            pass
+            
+    csv_read.close()
+    
+    while(True):
+        baselineTx = int(w3.geth.txpool.status()['pending'],0)
+        maxGasTx = int(w3_2.geth.txpool.status()['pending'],0)
+
+        if (baselineTx == 0):
+            w3.geth.miner.stop()
+        if(maxGasTx == 0):
+            w3_2.geth.miner.stop()
+        
+        if(baselineTx == 0 and maxGasTx == 0):
+            break
 
 
-def replayEvitar(w3,src,thresh,wnd):
+def replayEvitar(w3,file,thresh,wnd):
     private_key_0, private_key_1 = txF.getPrivateKey(w3,0), txF.getPrivateKey(w3,1) # private key and nonce for both owner and guest
     nonce_0, nonce_1 = w3.eth.getTransactionCount(w3.eth.accounts[0]), w3.eth.getTransactionCount(w3.eth.accounts[1])
     unMine = []  # list that stored pending txId to use for gathering data for warning
     gas_price = 1000000
-    addressMapping, ownerMapping = txF.mapContractInfo('available_contract.csv')
+    addressMapping, ownerMapping = txF.mapContractInfo('./result/available_contract.csv')
     start_time = time.time()
     count = 0
 
-    #split all tx to each address
-    txPool, maxLen, cmCounterWarn = splitTx(src,addressMapping)
-    print('Load successfully')
 
+    csv_read = open(file, "r")
+    csv_reader = csv.reader(csv_read, delimiter=",")
+    csv_reader.__next__()
+    #split all tx to each address
+    txPool, maxLen, cmCounterWarn = splitTx(csv_reader,addressMapping)
+    print('Load successfully')
+    csv_read.close()
+    
     try:
         os.mkdir('./tmp')
     except FileExistsError:
@@ -175,3 +215,6 @@ def replayEvitar(w3,src,thresh,wnd):
         address, method, status = writeTx(w3,txId)
         if(status):
             cmCounterWarn[address][method][1] += 1
+
+    # Save node current state before continue to new file
+    saveGethNode(file)
