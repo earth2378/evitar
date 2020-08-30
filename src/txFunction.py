@@ -41,9 +41,9 @@ def minePendingTx(w3,core):
 
 def getPrivateKey(w3,account):
     if(account == 0):
-        file = '/Users/earthsiwapol/master-degree/ethereum/database/keystore/UTC--2020-08-16T16-14-24.625333000Z--77277497694a2642e05dd14004c80b9da6804611'
+        file = './keystore/UTC--2020-08-16T16-14-24.625333000Z--77277497694a2642e05dd14004c80b9da6804611'
     elif(account == 1):
-        file = '/Users/earthsiwapol/master-degree/ethereum/database/keystore/UTC--2020-08-16T16-14-39.814045000Z--8455e53c071774a2afcad0f0266671e3a557a62d'
+        file = './keystore/UTC--2020-08-16T16-14-39.814045000Z--8455e53c071774a2afcad0f0266671e3a557a62d'
     with open(file) as keyfile:
         encrypted_key = keyfile.read()
         private_key = w3.eth.account.decrypt(encrypted_key, '1')
