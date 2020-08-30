@@ -98,7 +98,11 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
             tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),int(row[5]),gas_price,row[7],pk)
             txF.sendTx(w3_2,tx)
         except:
-            pass
+            print(row)
+            csv_write = open("error.csv","a")
+            csv_writer = csv.writer(csv_write, delimiter=',')
+            csv_writer.writerow(row)
+            csv_write.close()
             
     csv_read.close()
     
