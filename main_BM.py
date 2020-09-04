@@ -12,7 +12,7 @@ if __name__ == "__main__":
     file = "./evitar_tx_by_hash/0xe.csv"
     rTx.replayBaseLineAndMaxGas(w3,w3_2,file)
 
-    txF.writeTx(w3,'./result/result_baseline.csv',44)
-    txF.writeTx(w3,'./result/result_maxgas.csv',44)
+    txF.writeTx(w3,'./result/result_baseline.csv',28)
+    txF.writeTx(w3,'./result/result_maxgas.csv',28)
 
     
