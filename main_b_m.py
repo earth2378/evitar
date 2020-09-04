@@ -14,5 +14,3 @@ if __name__ == "__main__":
 
     txF.writeTx(w3,'./result/result_baseline.csv',28)
     txF.writeTx(w3,'./result/result_maxgas.csv',28)
-
-    
