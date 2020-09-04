@@ -1,6 +1,5 @@
 import math,csv,time,_thread,os,random
 import src.txFunction as txF
-import src.initNode as init
 import src.replayTx as rTx
 from web3 import Web3, HTTPProvider, IPCProvider, WebsocketProvider
 

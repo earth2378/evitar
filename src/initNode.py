@@ -64,3 +64,17 @@ def getAvailableContract(w3):
     
     csv_write.close()
     csv_file.close()
+
+def checkSuccessfulContract():
+    csv_file = open("./result/available_contract.csv","r")
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    next(csv_reader, None)
+    success = 0
+    total = 0
+    for row in csv_reader:
+        if row[4] == "Success":
+            success += 1
+        total += 1
+
+    print("Successful contract:", success)
+    print("Total contract:", total)
