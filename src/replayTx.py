@@ -43,10 +43,32 @@ def writeTx(w3,txId):
     csv_write.close()
     return txResult.to, txResult.input[0:10], txReceipt.status
 
-def saveGethNode(file):
-    src = "./geth/geth"
-    dst = "./" + file + "/geth"
-    shutil.copytree(src, dst)  
+def backup(file):
+    try:
+        shutil.rmtree("../database/backup")
+    except:
+        pass
+    os.mkdir("../database/backup")
+
+    src = "../database/nodeEvitar/geth/chaindata"
+    dst = "../database/backup/" + file + "/chaindata"
+    shutil.copytree(src, dst) 
+
+
+def backupBM(file):
+    try:
+        shutil.rmtree("../database/backup")
+    except:
+        pass
+    os.mkdir("../database/backup")
+
+    src = "../database/nodeBaseline/geth/chaindata"
+    dst = "../database/backup/B_" + file + "/chaindata"
+    shutil.copytree(src, dst) 
+
+    src = "../database/nodeMaxGas/geth/chaindata"
+    dst = "../database/backup/M_" + file + "/chaindata"
+    shutil.copytree(src, dst)   
 
 #Function to deploy multiple transaction with normal and max gas
 def replayBaseLineAndMaxGas(w3,w3_2,file):
@@ -67,9 +89,11 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
 
     #row = hash,from_address, to_address, transaction_index, value, gas, gas_price, input, block_number, receipt_status, error
     for row in csv_reader:
-        if(count%10000 == 0):
-            print(count,time.time()-start_time)
         count += 1
+        if(count%10000 == 0):
+            print(file, count, time.time()-start_time)
+            break
+        
 
         #Check is contract owner
         if(row[1] == ownerMapping[row[2]]):
@@ -100,7 +124,7 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
         txF.sendTx(w3_2,tx)
 
 
-            
+    csv_reader = 0
     csv_read.close()
     
     while(True):
@@ -132,6 +156,7 @@ def replayEvitar(w3,file,thresh,wnd):
     #split all tx to each address
     txPool, maxLen, cmCounterWarn = splitTx(csv_reader,addressMapping)
     print('Load successfully')
+    csv_reader = 0
     csv_read.close()
     
     try:
@@ -147,7 +172,7 @@ def replayEvitar(w3,file,thresh,wnd):
         for address in txPool:
             count += 1
             if(count%1000 == 0):
-                print(count,time.time()-start_time)
+                print(file, count,time.time()-start_time)
 
             try:
                 #row = hash,from_address, to_address, transaction_index, value, 
@@ -210,6 +235,8 @@ def replayEvitar(w3,file,thresh,wnd):
             #TODO: save state
             del txPool[addr]
     
+    
+
     print('Mine at %s, at (%s, %s)' % (count, address, method))
     txF.minePendingTx(w3,4)
     for txId in unMine:
@@ -218,4 +245,4 @@ def replayEvitar(w3,file,thresh,wnd):
             cmCounterWarn[address][method][1] += 1
 
     # Save node current state before continue to new file
-    saveGethNode(file)
+    backup(file)
