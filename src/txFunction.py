@@ -124,6 +124,7 @@ def mapContractInfo(file):
             contractAddressMapping[row[2]] = row[3]
             ownerMapping[row[2]] = row[1]
 
+    print("Contract mapping finished.")
     return contractAddressMapping,ownerMapping
 
 def txGasUsed(w3,fileName,block_start,block_end=0):
