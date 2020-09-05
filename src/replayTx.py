@@ -51,6 +51,8 @@ def getBlockGasLimit(file):
     for row in csv_reader:
         blockGasLimit[row[0]] = int(row[1])
 
+    print("Block gas limit loaded.")
+    
     return blockGasLimit
 
 def backup(file):
@@ -177,16 +179,15 @@ def replayEvitar(w3,file,thresh,wnd):
         #list of address that all txs are mined, use for clean up some memory
         delAddr = []
         mineFlag = False
-        print(">>>>>",i)
         for address in txPool:
             count += 1
-            if(count%1000 == 0):
+            if(count%10000 == 0):
                 print(file, count,time.time()-start_time)
 
             try:
-
                 #row = hash,from_address, to_address, transaction_index, value, gas, gas_price, input, block_number, receipt_status
-                row, method= txPool[address][1][i], row[7][0:10]
+                row = txPool[address][1][i]
+                method = row[7][0:10]
 
                 #check that method in address is warned or not
                 isWarn = cmCounterWarn[address][method][2]
@@ -213,7 +214,7 @@ def replayEvitar(w3,file,thresh,wnd):
                             cmCounterWarn[address][method][2] = True
                         else:
                             cmCounterWarn[address][method][2] = False
-                        print('Update at %s, at (%s, %s)' % (count, address, method))
+                        # print('Update at %s, at (%s, %s)' % (count, address, method))
 
                     
                     #when in tmp pool reach thershold, mine and update tx to csv file, reset unMine and cmCounter
@@ -229,7 +230,7 @@ def replayEvitar(w3,file,thresh,wnd):
         
         #mine tx every 2000 tx or reach thershold
         if(mineFlag):
-            print('Mine at %s, at (%s, %s)' % (count, address, method))
+            # print('Mine at %s, at (%s, %s)' % (count, address, method))
             txF.minePendingTx(w3,4)
             for txId in unMine:
                 address, method, status = writeTx(w3,txId)
@@ -241,11 +242,9 @@ def replayEvitar(w3,file,thresh,wnd):
         for addr in delAddr: 
             #TODO: save state
             del txPool[addr]
-        
-        if(i == 3): 
-            break
     
-    print('Mine at %s, at (%s, %s)' % (count, address, method))
+    
+    # print('Mine at %s, at (%s, %s)' % (count, address, method))
     txF.minePendingTx(w3,4)
     for txId in unMine:
         address, method, status = writeTx(w3,txId)
