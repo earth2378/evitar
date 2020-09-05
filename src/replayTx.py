@@ -2,8 +2,6 @@ import math,csv,time,os,random,shutil
 from web3 import Web3, HTTPProvider, IPCProvider, WebsocketProvider
 import src.txFunction as txF
 
-
-
 # split each tx to their to_address and find the most called contract 
 # which is use as max loop in parallel tx sending
 def splitTx(src,addressMapping):
@@ -18,9 +16,10 @@ def splitTx(src,addressMapping):
 
         if(toAddress not in cmWarning):
             cmWarning[toAddress] = dict()
-            method = row[7][0:10]
-            if(method not in cmWarning[toAddress]):
-                cmWarning[toAddress][method] = [0, 0, False] # [txCount, success, warnFlag]
+        
+        method = row[7][0:10]
+        if(method not in cmWarning[toAddress]):
+            cmWarning[toAddress][method] = [0, 0, False] # [txCount, success, warnFlag]
 
         if(toAddress not in txPool):
             txPool[toAddress] = [1,[row]] # [totalTx, txData]
@@ -42,6 +41,17 @@ def writeTx(w3,txId):
     csv_writer.writerow([getattr(txReceipt, 'from'),txResult.to,txResult.gas,txReceipt.gasUsed,txReceipt.status])
     csv_write.close()
     return txResult.to, txResult.input[0:10], txReceipt.status
+
+def getBlockGasLimit(file):
+    blockGasLimit = dict()
+    csv_read = open(file, "r")
+    csv_reader = csv.reader(csv_read, delimiter=",")
+    csv_reader.__next__()
+
+    for row in csv_reader:
+        blockGasLimit[row[0]] = int(row[1])
+
+    return blockGasLimit
 
 def backup(file):
     try:
@@ -79,6 +89,7 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
     addressMapping, ownerMapping = txF.mapContractInfo('./result/available_contract.csv')
     start_time = time.time()
     count = 0
+    blockGasLimit = getBlockGasLimit("./result/block_gas_limit.csv")
 
     csv_read = open(file, "r")
     csv_reader = csv.reader(csv_read, delimiter=",")
@@ -92,9 +103,7 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
         count += 1
         if(count%10000 == 0):
             print(file, count, time.time()-start_time)
-            break
         
-
         #Check is contract owner
         if(row[1] == ownerMapping[row[2]]):
             pk, nonce = private_key_0, nonce_0
@@ -120,9 +129,8 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
             txF.sendTx(w3,tx)
 
         #sendWithMaxGas
-        tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),8000000,gas_price,row[7],pk)
+        tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),blockGasLimit[row[8]],gas_price,row[7],pk)
         txF.sendTx(w3_2,tx)
-
 
     csv_reader = 0
     csv_read.close()
@@ -146,6 +154,7 @@ def replayEvitar(w3,file,thresh,wnd):
     unMine = []  # list that stored pending txId to use for gathering data for warning
     gas_price = 1000000
     addressMapping, ownerMapping = txF.mapContractInfo('./result/available_contract.csv')
+    blockGasLimit = getBlockGasLimit("./result/block_gas_limit.csv")
     start_time = time.time()
     count = 0
 
@@ -168,17 +177,16 @@ def replayEvitar(w3,file,thresh,wnd):
         #list of address that all txs are mined, use for clean up some memory
         delAddr = []
         mineFlag = False
-
+        print(">>>>>",i)
         for address in txPool:
             count += 1
             if(count%1000 == 0):
                 print(file, count,time.time()-start_time)
 
             try:
-                #row = hash,from_address, to_address, transaction_index, value, 
-                #gas, gas_price, input, block_number, receipt_status, error, gasLimit
-                row = txPool[address][1][i]
-                method = row[7][0:10]
+
+                #row = hash,from_address, to_address, transaction_index, value, gas, gas_price, input, block_number, receipt_status
+                row, method= txPool[address][1][i], row[7][0:10]
 
                 #check that method in address is warned or not
                 isWarn = cmCounterWarn[address][method][2]
@@ -187,10 +195,10 @@ def replayEvitar(w3,file,thresh,wnd):
                 if(not isWarn):
                     #create tx for sending to geth, check owner before sending
                     if(row[1] == ownerMapping[row[2]]):
-                        tx = txF.createTx(w3,address,nonce_0,int(row[4]),int(row[11]),gas_price,row[7],private_key_0)
+                        tx = txF.createTx(w3,address,nonce_0,int(row[4]),blockGasLimit[row[8]],gas_price,row[7],private_key_0)
                         nonce_0 += 1
                     else:
-                        tx = txF.createTx(w3,address,nonce_1,int(row[4]),int(row[11]),gas_price,row[7],private_key_1)
+                        tx = txF.createTx(w3,address,nonce_1,int(row[4]),blockGasLimit[row[8]],gas_price,row[7],private_key_1)
                         nonce_1 += 1
 
                     #send tx to geth, add txId to pool, set new gas price
@@ -215,7 +223,6 @@ def replayEvitar(w3,file,thresh,wnd):
             except IndexError: 
                 print('out of bound')
             
-            
             #when reach all tx in address, mark address and its tx to be deleted to prevent out of bound error    
             if(txPool[address][0] == i+1): 
                 delAddr.append(address)
@@ -234,9 +241,10 @@ def replayEvitar(w3,file,thresh,wnd):
         for addr in delAddr: 
             #TODO: save state
             del txPool[addr]
+        
+        if(i == 3): 
+            break
     
-    
-
     print('Mine at %s, at (%s, %s)' % (count, address, method))
     txF.minePendingTx(w3,4)
     for txId in unMine:
