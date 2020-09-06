@@ -252,4 +252,4 @@ def replayEvitar(w3,file,thresh,wnd):
             cmCounterWarn[address][method][1] += 1
 
     # Save node current state before continue to new file
-    backup(file)
+    # backup(file)
