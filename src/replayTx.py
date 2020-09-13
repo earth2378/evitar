@@ -181,14 +181,18 @@ def replayEvitar(w3,file,thresh,wnd):
         mineFlag = False
         for address in txPool:
             count += 1
+
+            #By pass mined tx
+            # if(count < target):
+            #     continue
             if(count%10000 == 0):
                 print(file, count,time.time()-start_time)
-
+                
             try:
                 #row = hash,from_address, to_address, transaction_index, value, gas, gas_price, input, block_number, receipt_status
                 row = txPool[address][1][i]
                 method = row[7][0:10]
-
+                
                 #check that method in address is warned or not
                 isWarn = cmCounterWarn[address][method][2]
 
@@ -207,15 +211,6 @@ def replayEvitar(w3,file,thresh,wnd):
                     unMine.append(txId) 
                     gas_price += 1
                     cmCounterWarn[address][method][0] += 1 # count tx sent in each CM
-
-                    if(cmCounterWarn[address][method][0]%wnd == 0):
-                        successRate = cmCounterWarn[address][method][1]/cmCounterWarn[address][method][0] #successTx / totalTx 
-                        if(successRate < thresh):
-                            cmCounterWarn[address][method][2] = True
-                        else:
-                            cmCounterWarn[address][method][2] = False
-                        # print('Update at %s, at (%s, %s)' % (count, address, method))
-
                     
                     #when in tmp pool reach thershold, mine and update tx to csv file, reset unMine and cmCounter
                     if((cmCounterWarn[address][method][0]%wnd == 0) or count%2000 == 0):
@@ -236,6 +231,15 @@ def replayEvitar(w3,file,thresh,wnd):
                 address, method, status = writeTx(w3,txId)
                 if(status):
                     cmCounterWarn[address][method][1] += 1
+
+                if(cmCounterWarn[address][method][0]%wnd == 0):
+                    successRate = cmCounterWarn[address][method][1]/cmCounterWarn[address][method][0] #successTx / totalTx 
+                    if(successRate < thresh):
+                        cmCounterWarn[address][method][2] = True
+                    else:
+                        cmCounterWarn[address][method][2] = False
+                    # print('Update at %s, at (%s, %s)' % (count, address, method))
+                
             unMine = []     
 
         #delete address that reach all tx
@@ -250,6 +254,15 @@ def replayEvitar(w3,file,thresh,wnd):
         address, method, status = writeTx(w3,txId)
         if(status):
             cmCounterWarn[address][method][1] += 1
+            
+        if(cmCounterWarn[address][method][0]%wnd == 0):
+                    successRate = cmCounterWarn[address][method][1]/cmCounterWarn[address][method][0] #successTx / totalTx 
+                    if(successRate < thresh):
+                        cmCounterWarn[address][method][2] = True
+                    else:
+                        cmCounterWarn[address][method][2] = False
+                    # print('Update at %s, at (%s, %s)' % (count, address, method))
+                
 
     # Save node current state before continue to new file
     # backup(file)
