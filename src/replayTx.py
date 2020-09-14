@@ -97,9 +97,6 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
     csv_reader = csv.reader(csv_read, delimiter=",")
     csv_reader.__next__()
 
-    w3.geth.miner.start(1)
-    w3_2.geth.miner.start(1)
-
     #row = hash,from_address, to_address, transaction_index, value, gas, gas_price, input, block_number, receipt_status, error
     for row in csv_reader:
         count += 1
@@ -134,20 +131,15 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
         tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),blockGasLimit[row[8]],gas_price,row[7],pk)
         txF.sendTx(w3_2,tx)
 
+        if(count%2000 == 0):
+            txF.minePendingTx(w3,4)
+            txF.minePendingTx(w3_2,4)
+
+
     csv_reader = 0
     csv_read.close()
-    
-    while(True):
-        baselineTx = int(w3.geth.txpool.status()['pending'],0)
-        maxGasTx = int(w3_2.geth.txpool.status()['pending'],0)
-
-        if (baselineTx == 0):
-            w3.geth.miner.stop()
-        if(maxGasTx == 0):
-            w3_2.geth.miner.stop()
-        
-        if(baselineTx == 0 and maxGasTx == 0):
-            break
+    txF.minePendingTx(w3,4)
+    txF.minePendingTx(w3_2,4)
 
 
 def replayEvitar(w3,file,thresh,wnd):
