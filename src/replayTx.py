@@ -1,6 +1,14 @@
-import math,csv,time,os,random,shutil
-from web3 import Web3, HTTPProvider, IPCProvider, WebsocketProvider
+import csv
+import math
+import os
+import random
+import shutil
+import time
+
+from web3 import HTTPProvider, IPCProvider, Web3, WebsocketProvider
+
 import src.txFunction as txF
+
 
 # split each tx to their to_address and find the most called contract 
 # which is use as max loop in parallel tx sending
@@ -132,14 +140,14 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
         txF.sendTx(w3_2,tx)
 
         if(count%2000 == 0):
-            txF.minePendingTx(w3,4)
-            txF.minePendingTx(w3_2,4)
+            txF.minePendingTx(w3,1)
+            txF.minePendingTx(w3_2,1)
 
 
     csv_reader = 0
     csv_read.close()
-    txF.minePendingTx(w3,4)
-    txF.minePendingTx(w3_2,4)
+    txF.minePendingTx(w3,1)
+    txF.minePendingTx(w3_2,1)
 
 
 def replayEvitar(w3,file,thresh,wnd):
