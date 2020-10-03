@@ -31,8 +31,9 @@ if __name__ == "__main__":
     directory = "./evitar_tx_by_hash/"
     fileName = "./evitar_tx_by_hash/"+file
     resFile = './result/result_evitar{}_{}'.format(evitar, file)
+    csv.field_size_limit(100000000)
     # print(fileName)
     # print(resFile)
 
     rTx.replayEvitar(w3, fileName, thresh, wnd)
-    txF.writeTx(w3, './result/result_evitar.csv', 28)
+    txF.writeTx(w3, resFile, 28)
