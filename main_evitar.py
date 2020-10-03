@@ -17,19 +17,22 @@ if __name__ == "__main__":
 
     w3 = Web3(HTTPProvider('http://localhost:8545'))
     file = sys.argv[1]
-    thresh = float(sys.argv[2])
-    wnd = int(sys.argv[3])
+    evitar = int(sys.argv[2])
+    if(evitar == 1):
+        thresh = 0.5
+        wnd = 50
+    elif(evitar == 2):
+        thresh = 0.25
+        wnd = 50
+    elif(evitar == 3):
+        thresh = 0.5
+        wnd = 10
+
     directory = "./evitar_tx_by_hash/"
-
-    # files = os.listdir("./evitar_tx_by_hash")
-    # files.sort()
-    # print(files)
-
-    # for file in files:
     fileName = "./evitar_tx_by_hash/"+file
-    rTx.replayEvitar(w3, fileName, thresh, wnd)
+    resFile = './result/result_evitar{}_{}'.format(evitar, file)
+    # print(fileName)
+    # print(resFile)
 
-    print(fileName)
-    resFile = './result/result_{}_{}_{}'.format(thresh, str(wnd), file)
-    print(resFile)
+    rTx.replayEvitar(w3, fileName, thresh, wnd)
     txF.writeTx(w3, './result/result_evitar.csv', 28)
