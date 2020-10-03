@@ -3,6 +3,7 @@ import csv
 import math
 import os
 import random
+import sys
 import time
 
 from web3 import HTTPProvider, IPCProvider, Web3, WebsocketProvider
@@ -26,7 +27,7 @@ if __name__ == "__main__":
 
     # for file in files:
     fileName = "./evitar_tx_by_hash/"+file
-    rTx.replayBaseLineAndMaxGas(w3, w3_2, fileName)
+    # rTx.replayBaseLineAndMaxGas(w3, w3_2, fileName)
 
-    txF.writeTx(w3, './result/result_baseline_{}.csv'.format{file}, 28)
-    txF.writeTx(w3, './result/result_maxgas_{}.csv'.format{file}, 28)
+    txF.writeTx(w3, './result/result_baseline_{}.csv'.format(file), 28)
+    txF.writeTx(w3, './result/result_maxgas_{}.csv'.format(file), 28)
