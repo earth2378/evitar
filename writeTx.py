@@ -19,5 +19,5 @@ if __name__ == "__main__":
     w3_2 = Web3(HTTPProvider('http://localhost:8544'))
     csv.field_size_limit(100000000)
 
-    txF.writeTx(w3, './result/result_baseline_{}.csv'.format(file), 28)
-    txF.writeTx(w3, './result/result_maxgas_{}.csv'.format(file), 28)
+    txF.writeTx(w3, './result/result_baseline_{}.csv'.format(file), 13)
+    txF.writeTx(w3, './result/result_maxgas_{}.csv'.format(file), 13)
