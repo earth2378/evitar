@@ -39,6 +39,16 @@ def minePendingTx(w3,core):
             pendingTx = int(w3.geth.txpool.status()['pending'],0)
     w3.geth.miner.stop()
 
+def minePendingTxWithThresh(w3,core,minimum):
+    pendingTx = int(w3.geth.txpool.status()['pending'],0)
+    if(pendingTx == 0):
+        return 'finished'
+    else:
+        w3.geth.miner.start(core)
+        while(pendingTx > minimum):
+            pendingTx = int(w3.geth.txpool.status()['pending'],0)
+    w3.geth.miner.stop()
+
 def getPrivateKey(w3,account):
     if(account == 0):
         file = './keystore/UTC--2020-08-16T16-14-24.625333000Z--77277497694a2642e05dd14004c80b9da6804611'

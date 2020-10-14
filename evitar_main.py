@@ -36,4 +36,4 @@ if __name__ == "__main__":
     # print(resFile)
 
     rTx.replayEvitar(w3, fileName, thresh, wnd)
-    txF.writeTx(w3, resFile, 28)
+    # txF.writeTx(w3, resFile, 28)
