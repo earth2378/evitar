@@ -19,15 +19,26 @@ if __name__ == "__main__":
     w3_2 = Web3(HTTPProvider('http://localhost:8544'))
     csv.field_size_limit(100000000)
 
-    file = sys.argv[1]
-
+    mode = sys.argv[1]
     # files = os.listdir("./evitar_tx_by_hash")
     # files.sort()
     # print(files)
 
-    # for file in files:
-    fileName = "./evitar_tx_by_hash/"+file
-    rTx.replayBaseLineAndMaxGas(w3, w3_2, fileName)
+    low_mem = ['0x0.csv','0x3.csv','0x4.csv','0x5.csv','0x6.csv','0x7.csv','0x9.csv','0xa.csv','0xb.csv','0xc.csv','0xd.csv','0xe.csv','0xf.csv']
+    high_mem = ['0x1.csv','0x2.csv','0x8.csv']
+
+    if mode == 'low_mem':
+        for file in low_mem:
+            print(file)
+            fileName = "./evitar_tx_by_hash/"+file
+            rTx.replayBaseLineAndMaxGas(w3, w3_2, fileName)
+    elif mode == 'high_mem':
+        for file in high_mem:
+            print(file)
+            fileName = "./evitar_tx_by_hash/"+file
+            rTx.replayBaseLineAndMaxGas(w3, w3_2, fileName)
+    else:
+        print('low_mem or high_mem only')
 
     # txF.writeTx(w3, './result/result_baseline_{}.csv'.format(file), 28)
     # txF.writeTx(w3, './result/result_maxgas_{}.csv'.format(file), 28)
