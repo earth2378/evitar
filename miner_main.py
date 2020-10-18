@@ -26,8 +26,8 @@ if __name__ == "__main__":
 
     while(True):
         pendingTx = int(w3.geth.txpool.status()['pending'],0)
-        # 3 min
-        if(counter == 36):
+        # 10 min
+        if(counter == 60):
             break
         if(pendingTx > 2000):
             print("Start mining ...")
@@ -36,7 +36,7 @@ if __name__ == "__main__":
             print("Pause mining ...")
         counter += 1
 
-        time.sleep(5)
+        time.sleep(10)
 
     txF.minePendingTx(w3,2)
     
