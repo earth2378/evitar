@@ -39,5 +39,7 @@ if __name__ == "__main__":
         time.sleep(10)
 
     txF.minePendingTx(w3,2)
+    print("Finished")
+
     
 
