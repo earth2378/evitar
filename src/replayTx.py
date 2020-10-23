@@ -131,7 +131,7 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
             for char in row[7][2:]:
                 if char != "0":
                     nonZero += 1
-            
+            gas_price += 1
             tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),int(row[5])+(62*nonZero),gas_price,row[7],pk)
             txF.sendTx(w3,tx)
 
@@ -143,15 +143,10 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
             gas_price += 1
             tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),int(row[5])+1,gas_price,row[7],pk)
             txF.sendTx(w3,tx)
-        # if(count%4000 == 0):
-            # txF.minePendingTx(w3,4)
-            # txF.minePendingTx(w3_2,4)
 
 
     csv_reader = 0
     csv_read.close()
-    # txF.minePendingTx(w3,4)
-    # txF.minePendingTx(w3_2,4)
 
 
 def replayEvitar(w3,file,thresh,wnd):
