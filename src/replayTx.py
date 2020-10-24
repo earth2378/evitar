@@ -139,7 +139,7 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
             tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),blockGasLimit[row[8]],gas_price,row[7],pk)
             txF.sendTx(w3_2,tx)
         except:
-            tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),int(row[5])+1,int(gas_price*1.1),row[7],pk)
+            tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),blockGasLimit[row[8]],int(gas_price*1.1),row[7],pk)
             txF.sendTx(w3,tx)
 
 
