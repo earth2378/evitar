@@ -134,13 +134,13 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
             tx = txF.createTx(w3,toAddress,nonce,int(row[4]),int(row[5])+(62*nonZero),int(int(gas_price)*1.1),row[7],pk)
             txF.sendTx(w3,tx)
 
-        #sendWithMaxGas
-        try:
-            tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),blockGasLimit[row[8]],gas_price,row[7],pk)
-            txF.sendTx(w3_2,tx)
-        except:
-            tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),blockGasLimit[row[8]],int(int(gas_price)*1.1),row[7],pk)
-            txF.sendTx(w3_2,tx)
+        # #sendWithMaxGas
+        # try:
+        #     tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),blockGasLimit[row[8]],gas_price,row[7],pk)
+        #     txF.sendTx(w3_2,tx)
+        # except:
+        #     tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),blockGasLimit[row[8]],int(int(gas_price)*1.1),row[7],pk)
+        #     txF.sendTx(w3_2,tx)
 
 
     csv_reader = 0
@@ -195,6 +195,10 @@ def replayEvitar(w3,file,thresh,wnd):
 
                 #if CM is bad method, avoid sending tx
                 if(not isWarn):
+                    # tmp = 0
+                    # if count <= 2202:
+                    #     tmp = gas_price
+                    #     gas_price = int(gas_price*1.1)
                     #create tx for sending to geth, check owner before sending
                     if(row[1] == ownerMapping[row[2]]):
                         tx = txF.createTx(w3,address,nonce_0,int(row[4]),blockGasLimit[row[8]],gas_price,row[7],private_key_0)
@@ -202,7 +206,8 @@ def replayEvitar(w3,file,thresh,wnd):
                     else:
                         tx = txF.createTx(w3,address,nonce_1,int(row[4]),blockGasLimit[row[8]],gas_price,row[7],private_key_1)
                         nonce_1 += 1
-
+                    # gas_price = tmp
+                    
                     #send tx to geth, add txId to pool, set new gas price
                     txId = txF.sendTx(w3,tx)
                     unMine.append(txId) 
