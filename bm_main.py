@@ -16,7 +16,7 @@ import src.txFunction as txF
 
 if __name__ == "__main__":
     w3 = Web3(HTTPProvider('http://localhost:8545'))
-    # w3_2 = Web3(HTTPProvider('http://localhost:8544'))
+    w3_2 = Web3(HTTPProvider('http://localhost:8544'))
     csv.field_size_limit(100000000)
 
     mode = sys.argv[1]
