@@ -28,7 +28,6 @@ if __name__ == "__main__":
         thresh = 0.5
         wnd = 10
 
-    directory = "./evitar_tx_by_hash/"
     fileName = "./evitar_tx_by_hash/"+file
     resFile = './result/result_evitar{}_{}'.format(evitar, file)
     csv.field_size_limit(100000000)
