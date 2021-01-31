@@ -36,7 +36,7 @@ if __name__ == "__main__":
             print("Pause mining ...")
         counter += 1
 
-        time.sleep(10)
+        time.sleep(5)
 
     txF.minePendingTx(w3,2)
     print("Finished")
