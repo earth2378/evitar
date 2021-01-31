@@ -3,6 +3,7 @@ import glob
 import pandas as pd
 
 def combineCSV():
+    csv.field_size_limit(100000000)
     os.chdir("../database/baselineTxs")
     extension = 'csv'
     all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
