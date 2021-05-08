@@ -4,11 +4,9 @@ import os
 import random
 import shutil
 import time
-
-from web3 import HTTPProvider, IPCProvider, Web3, WebsocketProvider
-
 import src.txFunction as txF
 
+from web3 import HTTPProvider, IPCProvider, Web3, WebsocketProvider
 
 # split each tx to their to_address and find the most called contract 
 # which is use as max loop in parallel tx sending
@@ -18,7 +16,6 @@ def splitTx(src,addressMapping):
     cmWarning = dict()
     maxLen = 0
     for row in src:
-        #row = hash,from_address, to_address, transaction_index, value, 
         #gas, gas_price, input, block_number, receipt_status, error, gasLimit
         toAddress = addressMapping[row[2]]
 
@@ -62,35 +59,58 @@ def getBlockGasLimit(file):
     print("Block gas limit loaded.")
     
     return blockGasLimit
+    
+#Function to deploy multiple transaction with normal 
+def replayBaseLine(w3, file):
+    private_key_0, private_key_1 = txF.getPrivateKey(w3,0), txF.getPrivateKey(w3,1)
+    nonce_0, nonce_1 = w3.eth.getTransactionCount(w3.eth.accounts[0]), w3.eth.getTransactionCount(w3.eth.accounts[1])
 
-def backup(file):
-    try:
-        shutil.rmtree("../database/backup")
-    except:
-        pass
-    os.mkdir("../database/backup")
+    gas_price = 1000000
+    addressMapping, ownerMapping = txF.mapContractInfo('./result/available_contract.csv')
+    start_time = time.time()
+    count = 0
+    blockGasLimit = getBlockGasLimit("./result/block_gas_limit.csv")
 
-    src = "../database/nodeEvitar/geth/chaindata"
-    dst = "../database/backup/" + file + "/chaindata"
-    shutil.copytree(src, dst) 
+    csv_read = open(file, "r")
+    csv_reader = csv.reader(csv_read, delimiter=",")
+    csv_reader.__next__()
 
+    #row = hash,from_address, to_address, transaction_index, value, gas, gas_price, input, block_number, receipt_status, error
+    for row in csv_reader:
+        count += 1
+        if(count%10000 == 0):
+            print(file, count, time.time()-start_time)
+        #Check is contract owner
+        if(row[1] == ownerMapping[row[2]]):
+            pk, nonce = private_key_0, nonce_0
+            nonce_0 += 1
+        else:
+            pk, nonce = private_key_1, nonce_1
+            nonce_1 += 1
 
-def backupBM(file):
-    try:
-        shutil.rmtree("../database/backup")
-    except:
-        pass
-    os.mkdir("../database/backup")
+        toAddress = addressMapping[row[2]]
 
-    src = "../database/nodeBaseline/geth/chaindata"
-    dst = "../database/backup/B_" + file + "/chaindata"
-    shutil.copytree(src, dst) 
+        #sendWithNormal
+        try:
+            tx = txF.createTx(w3,toAddress,nonce,int(row[4]),int(row[5]),gas_price,row[7],pk)
+            txF.sendTx(w3,tx)
+        except:
+            csv_write = open("error_tx.csv",'a',newline = '')
+            csv_writer = csv.writer(csv_write, delimiter=',')
+            csv_writer.writerow([toAddress,nonce,int(row[4]),blockGasLimit[row[8]],int(int(gas_price)*1.2),row[7]])
+            csv_write.close()
+            print(count)
+            nonZero = 0
+            for char in row[7][2:]:
+                if char != "0":
+                    nonZero += 1
+            tx = txF.createTx(w3,toAddress,nonce,int(row[4]),int(row[5])+(62*nonZero),int(int(gas_price)*1.2),row[7],pk)
+            txF.sendTx(w3,tx)
 
-    src = "../database/nodeMaxGas/geth/chaindata"
-    dst = "../database/backup/M_" + file + "/chaindata"
-    shutil.copytree(src, dst)   
+    csv_reader = 0
+    csv_read.close()
 
-#Function to deploy multiple transaction with normal and max gas
+#Function to deploy multiple transaction with max gas
 def replayBaseLineAndMaxGas(w3,w3_2,file):
     private_key_0, private_key_1 = txF.getPrivateKey(w3,0), txF.getPrivateKey(w3,1)
     nonce_0, nonce_1 = w3.eth.getTransactionCount(w3.eth.accounts[0]), w3.eth.getTransactionCount(w3.eth.accounts[1])
@@ -110,7 +130,6 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
         count += 1
         if(count%10000 == 0):
             print(file, count, time.time()-start_time)
-        
         #Check is contract owner
         if(row[1] == ownerMapping[row[2]]):
             pk, nonce = private_key_0, nonce_0
@@ -119,29 +138,30 @@ def replayBaseLineAndMaxGas(w3,w3_2,file):
             pk, nonce = private_key_1, nonce_1
             nonce_1 += 1
 
-        gas_price += 1
         toAddress = addressMapping[row[2]]
 
-        #sendWithNormal
+        #sendWithMaxGas
         try:
-            tx = txF.createTx(w3,toAddress,nonce,int(row[4]),int(row[5]),gas_price,row[7],pk)
-            txF.sendTx(w3,tx)
+            tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),blockGasLimit[row[8]],gas_price,row[7],pk)
+            txF.sendTx(w3_2,tx)
         except:
-            nonZero = 0
-            for char in row[7][2:]:
-                if char != "0":
-                    nonZero += 1
-            tx = txF.createTx(w3,toAddress,nonce,int(row[4]),int(row[5])+(62*nonZero),int(int(gas_price)*1.2),row[7],pk)
-            txF.sendTx(w3,tx)
-
-        # #sendWithMaxGas
-        # try:
-        #     tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),blockGasLimit[row[8]],gas_price,row[7],pk)
-        #     txF.sendTx(w3_2,tx)
-        # except:
-        #     tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),blockGasLimit[row[8]],int(int(gas_price)*1.1),row[7],pk)
-        #     txF.sendTx(w3_2,tx)
-
+            print(count)
+            csv_write = open("error_tx.csv",'a',newline = '')
+            csv_writer = csv.writer(csv_write, delimiter=',')
+            csv_writer.writerow([toAddress,nonce,int(row[4]),blockGasLimit[row[8]],int(int(gas_price)*1.1),row[7]])
+            csv_write.close() 
+            # try:
+            tx = txF.createTx(w3_2,toAddress,nonce,int(row[4]),blockGasLimit[row[8]],int(int(gas_price)*1.1),row[7],pk)
+            txF.sendTx(w3_2,tx)
+              
+            # except:
+            #     if(row[1] == ownerMapping[row[2]]):
+            #         pk, nonce = private_key_0, nonce_0
+            #         nonce_0 -= 1
+            #     else:
+            #         pk, nonce = private_key_1, nonce_1
+            #         nonce_1 -= 1
+             
 
     csv_reader = 0
     csv_read.close()
@@ -156,7 +176,6 @@ def replayEvitar(w3,file,thresh,wnd):
     blockGasLimit = getBlockGasLimit("./result/block_gas_limit.csv")
     start_time = time.time()
     count = 0
-
 
     csv_read = open(file, "r")
     csv_reader = csv.reader(csv_read, delimiter=",")
@@ -179,9 +198,6 @@ def replayEvitar(w3,file,thresh,wnd):
         for address in txPool:
             count += 1
 
-            #By pass mined tx
-            # if(count < target):
-            #     continue
             if(count%10000 == 0):
                 print(file, count,time.time()-start_time)
                 
@@ -195,23 +211,16 @@ def replayEvitar(w3,file,thresh,wnd):
 
                 #if CM is bad method, avoid sending tx
                 if(not isWarn):
-                    # tmp = 0
-                    # if count <= 2202:
-                    #     tmp = gas_price
-                    #     gas_price = int(gas_price*1.1)
-                    #create tx for sending to geth, check owner before sending
                     if(row[1] == ownerMapping[row[2]]):
                         tx = txF.createTx(w3,address,nonce_0,int(row[4]),blockGasLimit[row[8]],gas_price,row[7],private_key_0)
                         nonce_0 += 1
                     else:
                         tx = txF.createTx(w3,address,nonce_1,int(row[4]),blockGasLimit[row[8]],gas_price,row[7],private_key_1)
                         nonce_1 += 1
-                    # gas_price = tmp
                     
                     #send tx to geth, add txId to pool, set new gas price
                     txId = txF.sendTx(w3,tx)
                     unMine.append(txId) 
-                    gas_price += 1
                     cmCounterWarn[address][method][0] += 1 # count tx sent in each CM
                     
                     #when in tmp pool reach thershold, mine and update tx to csv file, reset unMine and cmCounter
@@ -246,11 +255,9 @@ def replayEvitar(w3,file,thresh,wnd):
 
         #delete address that reach all tx
         for addr in delAddr: 
-            #TODO: save state
             del txPool[addr]
     
     
-    # print('Mine at %s, at (%s, %s)' % (count, address, method))
     txF.minePendingTx(w3,4)
     for txId in unMine:
         address, method, status = writeTx(w3,txId)
@@ -263,8 +270,3 @@ def replayEvitar(w3,file,thresh,wnd):
                         cmCounterWarn[address][method][2] = True
                     else:
                         cmCounterWarn[address][method][2] = False
-                    # print('Update at %s, at (%s, %s)' % (count, address, method))
-                
-
-    # Save node current state before continue to new file
-    # backup(file)
