@@ -244,12 +244,13 @@ def replayEvitar(w3,file,thresh,wnd):
                     cmCounterWarn[address][method][1] += 1
 
                 if(cmCounterWarn[address][method][0]%wnd == 0):
-                    successRate = cmCounterWarn[address][method][1]/cmCounterWarn[address][method][0] #successTx / totalTx 
-                    if(successRate < thresh):
+                    successTx = cmCounterWarn[address][method][1]
+                    totalTx = cmCounterWarn[address][method][0]
+                    failRate = (totalTx-successRate) / totalTx
+                    if(failRate >= thresh):
                         cmCounterWarn[address][method][2] = True
                     else:
                         cmCounterWarn[address][method][2] = False
-                    # print('Update at %s, at (%s, %s)' % (count, address, method))
                 
             unMine = []     
 
@@ -263,10 +264,12 @@ def replayEvitar(w3,file,thresh,wnd):
         address, method, status = writeTx(w3,txId)
         if(status):
             cmCounterWarn[address][method][1] += 1
-            
+        
         if(cmCounterWarn[address][method][0]%wnd == 0):
-                    successRate = cmCounterWarn[address][method][1]/cmCounterWarn[address][method][0] #successTx / totalTx 
-                    if(successRate < thresh):
-                        cmCounterWarn[address][method][2] = True
-                    else:
-                        cmCounterWarn[address][method][2] = False
+            successTx = cmCounterWarn[address][method][1]
+            totalTx = cmCounterWarn[address][method][0]
+            failRate = (totalTx-successRate) / totalTx
+            if(failRate >= thresh):
+                cmCounterWarn[address][method][2] = True
+            else:
+                cmCounterWarn[address][method][2] = False
