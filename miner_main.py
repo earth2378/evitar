@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     while(True):
         pendingTx = int(w3.geth.txpool.status()['pending'],0)
-        # 10 min
+        # 5 min
         if(counter == 60):
             break
         if(pendingTx > 2000):
