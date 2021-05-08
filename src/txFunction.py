@@ -75,6 +75,17 @@ def checkTxInBlock(w3,block_start):
     print("Out of gas: "+str(oog))
 
 
+def extractTx(w3, dst,block_start,block_end):
+    csv_write = open(dst,'w+',newline = '')
+    csv_writer = csv.writer(csv_write, delimiter=',')
+    csv_writer.writerow(['hash','nonce','block_hash','block_number','transaction_index','from_address','to_address','value','gas','gas_price','input','block_timestamp'])
+    for i in range(block_start,block_end+1):
+        txList = w3.eth.getBlock(i).transactions
+        print(i, len(txList))
+        for tx in txList:
+            txResult = w3.eth.getTransaction(tx.hex())
+            csv_writer.writerow([txResult.hash.hex(), txResult.nonce, txResult.blockNumber, txResult.blockHash.hex(), txResult.transactionIndex, txResult['from'] ,txResult.to ,txResult.value ,txResult.gas ,txResult.gasPrice ,txResult.input])
+
 def writeTx(w3,fileName,block_start,block_end=0):
     result = dict()
     count = 0
