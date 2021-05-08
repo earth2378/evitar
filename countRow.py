@@ -7,6 +7,7 @@ def countRowOfFiles():
     os.chdir(path)
     extension = 'csv'
     all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
+    all_filenames.sort()
     for i in all_filenames:
         csv_file = open(i,'r+')
         csv_reader = csv.reader(csv_file, delimiter=',')
