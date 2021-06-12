@@ -206,7 +206,7 @@ def replayEvitar(w3,file,thresh,wnd):
                 row = txPool[address][1][i]
                 method = row[7][0:10]
                 
-                #check that method in address is warned or not
+                #check that method in address is warnepid or not
                 isWarn = cmCounterWarn[address][method][2]
 
                 #if CM is bad method, avoid sending tx
@@ -246,7 +246,7 @@ def replayEvitar(w3,file,thresh,wnd):
                 if(cmCounterWarn[address][method][0]%wnd == 0):
                     successTx = cmCounterWarn[address][method][1]
                     totalTx = cmCounterWarn[address][method][0]
-                    failRate = (totalTx-successRate) / totalTx
+                    failRate = (totalTx-successTx) / totalTx
                     if(failRate >= thresh):
                         cmCounterWarn[address][method][2] = True
                     else:
@@ -268,7 +268,7 @@ def replayEvitar(w3,file,thresh,wnd):
         if(cmCounterWarn[address][method][0]%wnd == 0):
             successTx = cmCounterWarn[address][method][1]
             totalTx = cmCounterWarn[address][method][0]
-            failRate = (totalTx-successRate) / totalTx
+            failRate = (totalTx-successTx) / totalTx
             if(failRate >= thresh):
                 cmCounterWarn[address][method][2] = True
             else:
