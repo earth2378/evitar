@@ -8,3 +8,6 @@ src/__pycache__/
 *ipynb
 evitar_tx/
 evitar_tx_by_hash/
+
+
+.vscode
