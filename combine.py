@@ -1,60 +1,69 @@
-import os, csv, glob, sys
+import os
+import csv
+import glob
+import sys
 import pandas as pd
+
 
 def combineCSV():
     path = sys.argv[1]
     dest = sys.argv[2]
+    mode = sys.argv[3]
     csv.field_size_limit(100000000)
-    # "../database/baselineTxs"
+
+    currentPath = os.getcwd()
     os.chdir(path)
-    extension = 'csv'
-    all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
-    for i in all_filenames:
-        print(i)
-    #combine all files in the list
-    combined_csv = pd.concat([pd.read_csv(f) for f in all_filenames ])
-    #export to csv
-    combined_csv.to_csv( "./{}".format(dest), index=False, columns=['hash','to_address','gas','input'], encoding='utf-8-sig')
+    filePath = os.getcwd()
+    all_filenames = [i for i in glob.glob('*.{}'.format('csv'))]
+    all_filenames.sort()
+    for i in range(len(all_filenames)):
+        all_filenames[i] = '{}/{}'.format(filePath, all_filenames[i])
+        print(all_filenames[i])
 
-def combineCSVLowMem():
-    path = sys.argv[1]
-    dest = sys.argv[2]
+    os.chdir(currentPath)
 
-    csv.field_size_limit(100000000)
-    # "../database/baselineTxs"
-    os.chdir(path)
+    if mode == 'a':
+        combineCSVFast(all_filenames, dest)
+    elif mode == 'b':
+        combineCSVLowMem(all_filenames, dest)
+    else:
+        print("Invalid mode: only a and b available")
 
-    extension = 'csv'
-    all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
 
-    csv_write = open(dest,'w+',newline = '')
+def combineCSVFast(all_filenames, dest):
+    # get file header
+    csv_file = open(all_filenames[0], 'r+')
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    header = csv_reader.__next__()
+    csv_file.close()
+
+    # combine all files in the list
+    combined_csv = pd.concat([pd.read_csv(f) for f in all_filenames])
+    # export to csv
+    combined_csv.to_csv(dest, index=False,
+                        columns=header, encoding='utf-8-sig')
+
+
+def combineCSVLowMem(all_filenames, dest):
+    csv_write = open(dest, 'w+', newline='')
     csv_writer = csv.writer(csv_write, delimiter=',')
-    csv_writer.writerow(['hash','to_address','gas','method'])
 
     writeHeader = False
 
-    count = 1
-
     for i in all_filenames:
-        csv_file = open(i,'r+')
+        csv_file = open(i, 'r+')
         csv_reader = csv.reader(csv_file, delimiter=',')
         header = csv_reader.__next__()
 
-        if not writeHeader :
+        if not writeHeader:
             csv_writer.writerow(header)
             writeHeader = True
 
-        for row in csv_reader:
-            # for strip txs input only
-            # csv_writer.writerow([row[0],row[6],row[8],row[10][:10]])
-            csv_writer.writerow(row)
-
-        csv_reader = 0
+        csv_writer.writerows(csv_reader)
         csv_file.close()
-
-        print(i, count, "/", len(all_filenames))
-        count += 1
+        print(i, 'completed')
 
     csv_write.close()
 
-combineCSVLowMem()
+
+combineCSV()
